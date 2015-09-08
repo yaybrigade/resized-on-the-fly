@@ -67,10 +67,8 @@ if(!class_exists('Aq_Resize')) {
                 // Validate inputs.
                 if (!$url)
                     throw new Aq_Exception('$url parameter is required');
-                if (!$width)
-                    throw new Aq_Exception('$width parameter is required');
-                if (!$height)
-                    throw new Aq_Exception('$height parameter is required');
+                if (!$width && !$height)
+                    throw new Aq_Exception('$width or $height parameter is required');
 
                 // Caipt'n, ready to hook.
                 if ( true === $upscale ) add_filter( 'image_resize_dimensions', array($this, 'aq_upscale'), 10, 6 );

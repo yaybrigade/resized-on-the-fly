@@ -30,7 +30,7 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 = 2.3.0 =
 (9/7/2015)
 * Initial WordPress plugin Release
-* No functionality changes
+* Clean up code a bit
 
 = 2.2.0 =
 (1/20/2015)

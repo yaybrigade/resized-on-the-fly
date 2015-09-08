@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Advanced Custom Fields: Separation
+Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
@@ -14,62 +14,73 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 /*  ********************************************
 	Image Resize Function 
-	* Returns <img> html for resized image (using Aqua Resizer)
-	* Images sizes are created on the fly
+	* Returns <img> html for resized image 
+	* Images sizes are created on the fly (using Aqua Resizer)
 	
-	* Features:
+	* Call: function resized_on_the_fly($image, $options_array)
+	
+	* $image:
+
+	  - image id [int]
+	  - or image array [array] (as provide by ACF)
+	
+	* $options_array:
 	
 	  Single image:
-	  - width [int]
-	  - height [int]
-	  - crop [true/false]
-	  - upscale [true/false]
-	  - return ['img', 'url']
-	  - alt [string]
-	  - add_classes [string]
+	  - $width [int]
+	  - $height [int]
+	  - $crop [true/false]
+	  - $upscale [true/false] (upscale works when both height and width are specified and crop is true)
+	  - $return ['img', 'url']
+	  - $alt [string]
+	  - $add_classes [string]
 	  
 	  Responsive images:
-	  - srcset [int, int, ...]
-  	  - sizes [string]
-	  - crop [true/false]
-	  	if crop is true then width and height will be used to get the crop ratio for the images
-		  - width [int]		
-		  - height [int]
-	  - upscale [true/false]
-	  - alt [string]
-	  - add_classes [string]  
+	  - $srcset [int, int, ...]
+  	  - $sizes [string]
+	  - $crop [true/false]
+	  	if $crop is true then $width and $height will be used to get the crop ratio for the images
+		  - $width [int]		
+		  - $height [int]
+	  - $upscale [true/false]
+	  - $alt [string]
+	  - $add_classes [string]  
 	  !!!
-	  Note: Responsive images will always return an img tag	  
+	  Note: Responsive images will always return an img tag	 ($return will be ignored)
 	
 */
 
-require 'Aqua-Resizer-master/aq_resizer.php'; // Thanks to Syamil MJ (https://github.com/syamilmj/Aqua-Resizer)
 
-function endsWith($haystack, $needle) {
-	// search forward starting from end minus needle length characters
-	return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;
-}
-function resized_on_the_fly($image_id_or_array, $options_array) {
-	
+// Require Aqua-Resizer
+// Thanks to Syamil MJ (https://github.com/syamilmj/Aqua-Resizer)
+// I'm using a forked version (https://github.com/yaybrigade/Aqua-Resizer)
+require 'Aqua-Resizer-master/aq_resizer.php'; 
+
+
+
+// Main Function
+function resized_on_the_fly($image, $options_array) {
+
 	// Get options from array
 	if ( ! $width = $options_array['width'] ) $width = false;
 	if ( ! $height = $options_array['height'] ) $height = false;
 	if ( ! $crop = $options_array['crop'] ) $crop = false;
 	if ( ! $alt = $options_array['alt'] ) $alt = false;
 	if ( ! $add_classes = $options_array['add_classes'] ) $add_classes = '';
-	if ( ! $upscale = $options_array['upscale'] ) $upscale = false; // $upscale=true works for aqua_resize (although it is not documented) when both height and width are specified
+	if ( ! $upscale = $options_array['upscale'] ) $upscale = false; 
 	if ( ! $return = $options_array['return'] ) $return = 'img';
 	if ( ! $srcset = $options_array['srcset'] ) $srcset = false;
 	if ( ! $sizes = $options_array['sizes'] ) $sizes = '';
 	
 	
-	// Get the image id
-	if ( 'array' == gettype($image_id_or_array) ){
-		$image_id = $image_id_or_array['id']; // get id from array
-	} else {
-		$image_id = $image_id_or_array; // id was passed
-	}
-	
+	// Get the image url
+
+	if ( 'array' == gettype($image) ):
+		$image_id = $image['id']; // get id from array
+	else:
+		$image_id = $image; // id was passed
+	endif;
+
 	// Get image object
 	$original = wp_get_attachment_image_src( $image_id, 'full' );
 
@@ -79,6 +90,7 @@ function resized_on_the_fly($image_id_or_array, $options_array) {
 	else:
 		return false; // abort if the original image doesn't even exist
 	endif;
+		
 	
 	// Is this a gif?
 	// Gif images will be ignored because their animated functionality would be lost
@@ -94,10 +106,10 @@ function resized_on_the_fly($image_id_or_array, $options_array) {
 	}
 	
 	
-	if ($srcset  && !$isGif):
+	if ($srcset && !$isGif):
 		// ***
 		// Responsive Images 
-		//    (always ignore gif images)
+		// (always ignore gif images)
 		
 		$image_sizes = explode(",", $srcset);
 		
@@ -112,6 +124,7 @@ function resized_on_the_fly($image_id_or_array, $options_array) {
 			endif;
 		
 			$new_url = aq_resize( $original_url, $this_width, $this_height, $crop, $single=true, $upscale );	
+
 			if ( false == $new_url ) $new_url = $original_url; // If image cannot be created use the original image url
 			
 			if ($srcset_string):
@@ -148,3 +161,10 @@ function resized_on_the_fly($image_id_or_array, $options_array) {
 
 	endif; // if ($srcset)
 };
+
+
+// Helper Function
+function endsWith($haystack, $needle) {
+	// search forward starting from end minus needle length characters
+	return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;
+}
