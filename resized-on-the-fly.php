@@ -4,7 +4,7 @@ Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
-Version: 2.3.0
+Version: 2.4.0
 Author: Roman Jaster, Yay Brigade
 Author URI: yaybrigade.com
 License: GPLv2 or later
@@ -26,27 +26,28 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 	
 	* $options_array:
 	
-	  Single image:
+	  Single image options:
 	  - $width [int]
 	  - $height [int]
-	  - $crop [true/false]
-	  - $upscale [true/false] (upscale works when both height and width are specified and crop is true)
+	  - $crop [boolean]
+	  - $upscale [boolean] (upscale works when both height and width are specified and crop is true)
 	  - $return ['img', 'url']
-	  - $alt [string]
-	  - $add_classes [string]
 	  
-	  Responsive images:
+	  Responsive images options:
 	  - $srcset [int, int, ...]
   	  - $sizes [string]
-	  - $crop [true/false]
+	  - $crop [boolean]
 	  	if $crop is true then $width and $height will be used to get the crop ratio for the images
 		  - $width [int]		
 		  - $height [int]
-	  - $upscale [true/false]
-	  - $alt [string]
-	  - $add_classes [string]  
+	  - $upscale [boolean]
 	  !!!
 	  Note: Responsive images will always return an img tag	 ($return will be ignored)
+	  
+	  Options for both:
+	  - $alt [string]
+	  - $add_classes [string]  
+	  - $itemprop [boolean] (add itemprop="image")
 	
 */
 
@@ -71,6 +72,7 @@ function resized_on_the_fly($image, $options_array) {
 	if ( ! $return = $options_array['return'] ) $return = 'img';
 	if ( ! $srcset = $options_array['srcset'] ) $srcset = false;
 	if ( ! $sizes = $options_array['sizes'] ) $sizes = '';
+	if ( ! $itemprop = $options_array['itemprop'] ) $itemprop = false;
 	
 	
 	// Get the image url
@@ -103,6 +105,12 @@ function resized_on_the_fly($image, $options_array) {
 	if ( ! $alt ) {
 		$attachment = get_post( $image_id ); 
 		$alt = get_post_meta( $attachment->ID, '_wp_attachment_image_alt', true );
+	}
+
+	// itemprop="image"
+	$itemprop_html = ''; 
+	if ( $itemprop ) {
+		$itemprop_html = ' itemprop="image" '; 
 	}
 	
 	
@@ -137,7 +145,7 @@ function resized_on_the_fly($image, $options_array) {
 		
 		endforeach;
 		
-		$img_html = "<img src=\"$smallest_url\"  srcset=\"$srcset_string\"  sizes=\"$sizes\"  alt=\"$alt\"  class=\"$add_classes\" />";
+		$img_html = "<img src=\"$smallest_url\"  srcset=\"$srcset_string\"  sizes=\"$sizes\"  alt=\"$alt\"  class=\"$add_classes\"  $itemprop_html />";
 		return $img_html;
 
 	else:
@@ -155,7 +163,7 @@ function resized_on_the_fly($image, $options_array) {
 			return $new_url;
 		else:
 			// Output image
-			$img_html = "<img src=\"$new_url\" alt=\"$alt\" class=\"$add_classes\" />";
+			$img_html = "<img src=\"$new_url\" alt=\"$alt\" class=\"$add_classes\"  $itemprop_html />";
 			return $img_html;
 		endif; 
 

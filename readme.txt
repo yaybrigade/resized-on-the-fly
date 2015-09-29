@@ -27,6 +27,10 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 
 == Changelog ==
 
+= 2.4.0 =
+(9/29/2015)
+* Add support for itemprop="image"
+
 = 2.3.0 =
 (9/7/2015)
 * Initial WordPress plugin Release
