@@ -4,7 +4,7 @@ Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
-Version: 2.4.0
+Version: 2.5.0
 Author: Roman Jaster, Yay Brigade
 Author URI: yaybrigade.com
 License: GPLv2 or later
@@ -48,6 +48,8 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 	  - $alt [string]
 	  - $add_classes [string]  
 	  - $itemprop [boolean] (add itemprop="image")
+	  - $lazyload [boolean] (for single image: uses data-scr instead of src | for responsive images: uses data-srcset instead of srcset)
+
 	
 */
 
@@ -73,6 +75,7 @@ function resized_on_the_fly($image, $options_array) {
 	if ( ! $srcset = $options_array['srcset'] ) $srcset = false;
 	if ( ! $sizes = $options_array['sizes'] ) $sizes = '';
 	if ( ! $itemprop = $options_array['itemprop'] ) $itemprop = false;
+	if ( ! $lazyload = $options_array['lazyload'] ) $lazyload = false;
 	
 	
 	// Get the image url
@@ -145,7 +148,13 @@ function resized_on_the_fly($image, $options_array) {
 		
 		endforeach;
 		
-		$img_html = "<img src=\"$smallest_url\"  srcset=\"$srcset_string\"  sizes=\"$sizes\"  alt=\"$alt\"  class=\"$add_classes\"  $itemprop_html />";
+		// Check for lazyload
+		$srcset_attribute ="srcset";
+		if ($lazyload) {
+			$srcset_attribute ="data-srcset";
+		}
+		
+		$img_html = "<img src=\"$smallest_url\"  $srcset_attribute=\"$srcset_string\"  sizes=\"$sizes\"  alt=\"$alt\"  class=\"$add_classes\"  $itemprop_html />";
 		return $img_html;
 
 	else:
@@ -162,8 +171,15 @@ function resized_on_the_fly($image, $options_array) {
 			// Return URL only
 			return $new_url;
 		else:
-			// Output image
-			$img_html = "<img src=\"$new_url\" alt=\"$alt\" class=\"$add_classes\"  $itemprop_html />";
+			// Output <img> tag
+			
+			// Check for lazyload
+			$src_attribute ="src";
+			if ($lazyload) {
+				$src_attribute ="data-src";
+			}
+			
+			$img_html = "<img $src_attribute=\"$new_url\" alt=\"$alt\" class=\"$add_classes\"  $itemprop_html />";
 			return $img_html;
 		endif; 
 
