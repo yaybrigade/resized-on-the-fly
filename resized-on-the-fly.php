@@ -4,7 +4,7 @@ Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
-Version: 2.5.0
+Version: 2.6.0
 Author: Roman Jaster, Yay Brigade
 Author URI: yaybrigade.com
 License: GPLv2 or later
@@ -41,6 +41,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 		  - $width [int]		
 		  - $height [int]
 	  - $upscale [boolean]
+	  - $transparent_placeholder [boolean] (uses base64 transparent svg as a placeholder for src attribute)
 	  !!!
 	  Note: Responsive images will always return an img tag	 ($return will be ignored)
 	  
@@ -76,6 +77,7 @@ function resized_on_the_fly($image, $options_array) {
 	if ( ! $sizes = $options_array['sizes'] ) $sizes = '';
 	if ( ! $itemprop = $options_array['itemprop'] ) $itemprop = false;
 	if ( ! $lazyload = $options_array['lazyload'] ) $lazyload = false;
+	if ( ! $transparent_placeholder = $options_array['transparent_placeholder'] ) $transparent_placeholder = false;
 	
 	
 	// Get the image url
@@ -141,7 +143,20 @@ function resized_on_the_fly($image, $options_array) {
 			if ($srcset_string):
 				$srcset_string .= ','; // add comma if there is already a value
 			else:
-				$smallest_url = $new_url; // save the smallest url for use with img tag later (as fallback for src property)
+				// First time this loop runs...
+				
+				// save the smallest url for use with img tag later (as fallback for src property)
+				$smallest_url = $new_url; 
+				
+				// or use a transparent placeholder
+				if ($transparent_placeholder):
+					$image_size = getimagesize($new_url);
+					if ($image_size) {
+						$w = $image_size[0]; // get actual image width
+						$h = $image_size[1]; // get actual image height
+						$smallest_url = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 $w $h'%2F%3E"; // transparent svg with width and height
+					}
+				endif;
 			endif; 
 			
 			$srcset_string .= $new_url . ' ' . $this_width . 'w';

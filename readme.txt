@@ -27,6 +27,10 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 
 == Changelog ==
 
+= 2.6.0 =
+(3/2/2016)
+* Add support for transparent svg placeholder (for responsive images)
+
 = 2.5.0 =
 (10/7/2015)
 * Add support for lazyload
