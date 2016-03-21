@@ -130,8 +130,10 @@ if(!class_exists('Aq_Resize')) {
 
                     if ( ! $dims || ( true == $crop && false == $upscale && ( $dst_w < $width || $dst_h < $height ) ) ) {
                         // Can't resize, so return false saying that the action to do could not be processed as planned.
-                        throw new Aq_Exception('Unable to resize image because image_resize_dimensions() failed');
-                    }
+                        // throw new Aq_Exception('Unable to resize image because image_resize_dimensions() failed');
+                    
+                        // disbled Aq_Exception() for this error because it logged an error every time an image was too small to be resized, at which point the orginial images should be served without causing an error mssage 
+                        return false;                    }
                     // Else check if cache exists.
                     elseif ( file_exists( $destfilename ) && getimagesize( $destfilename ) ) {
                         $img_url = "{$upload_url}{$dst_rel_path}-{$suffix}.{$ext}";
