@@ -4,7 +4,7 @@ Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
-Version: 2.6.0
+Version: 2.6.1
 Author: Roman Jaster, Yay Brigade
 Author URI: yaybrigade.com
 License: GPLv2 or later

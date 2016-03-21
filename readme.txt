@@ -2,7 +2,7 @@
 Contributors: Roman Jaster, Yay Brigade
 Tags: Utility, Images, Resizing
 Requires at least: 3.5.0
-Tested up to: 4.3
+Tested up to: 4.4.2
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,10 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 3. Function resized_on_the_fly() is now available for use in template files
 
 == Changelog ==
+
+= 2.6.1 =
+(3/21/2016)
+* Removed an aq_resizer() error message that was logged when images were too small to be resized
 
 = 2.6.0 =
 (3/2/2016)
