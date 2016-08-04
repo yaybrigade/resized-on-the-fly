@@ -4,7 +4,7 @@ Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
-Version: 2.6.1
+Version: 2.7
 Author: Roman Jaster, Yay Brigade
 Author URI: yaybrigade.com
 License: GPLv2 or later
@@ -150,10 +150,15 @@ function resized_on_the_fly($image, $options_array) {
 				
 				// or use a transparent placeholder
 				if ($transparent_placeholder):
-					$image_size = getimagesize($new_url);
+				
+					// get actual image size -- from transient or by looking at the image
+					if ( false === ( $image_size = get_transient( 'rotf_imagesize_' . $image_id  ) ) ) {
+						$image_size = getimagesize($new_url); 
+						set_transient( 'rotf_imagesize_' . $image_id, $image_size);
+					}
 					if ($image_size) {
-						$w = $image_size[0]; // get actual image width
-						$h = $image_size[1]; // get actual image height
+						$w = $image_size[0]; // actual image width
+						$h = $image_size[1]; // actual image height
 						$smallest_url = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 $w $h'%2F%3E"; // transparent svg with width and height
 					}
 				endif;
@@ -202,7 +207,18 @@ function resized_on_the_fly($image, $options_array) {
 };
 
 
-// Helper Function
+
+/**
+ * Flush out the transients used in idt_categorized_blog.
+ */
+function rotf_imagesize_transient_flusher($post_ID) {
+	delete_transient( 'rotf_imagesize_' . $post_ID);
+}
+add_action( 'edit_attachment', 'rotf_imagesize_transient_flusher' );
+
+/**
+ * Helper Function
+ */
 function endsWith($haystack, $needle) {
 	// search forward starting from end minus needle length characters
 	return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;

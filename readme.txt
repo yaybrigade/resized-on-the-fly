@@ -27,6 +27,12 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 
 == Changelog ==
 
+
+= 2.7 =
+(8/4/2016)
+* Performance improvement - image size is saved as a wp transient 
+  (so that it does not have to be checked repeatedly via PHP)
+
 = 2.6.1 =
 (3/21/2016)
 * Removed an aq_resizer() error message that was logged when images were too small to be resized
