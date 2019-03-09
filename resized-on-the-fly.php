@@ -4,7 +4,7 @@ Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
-Version: 2.7
+Version: 2.8
 Author: Roman Jaster, Yay Brigade
 Author URI: yaybrigade.com
 License: GPLv2 or later
@@ -46,7 +46,8 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 	  Note: Responsive images will always return an img tag	 ($return will be ignored)
 	  
 	  Options for both:
-	  - $alt [string]
+	  - $alt [string] (overwrites any alt info for image)
+	  - $alt_fallback [string] (used if no alt info is found for image)
 	  - $add_classes [string]  
 	  - $itemprop [boolean] (add itemprop="image")
 	  - $lazyload [boolean] (for single image: uses data-scr instead of src | for responsive images: uses data-srcset instead of srcset)
@@ -69,7 +70,8 @@ function resized_on_the_fly($image, $options_array) {
 	if ( ! $width = $options_array['width'] ) $width = false;
 	if ( ! $height = $options_array['height'] ) $height = false;
 	if ( ! $crop = $options_array['crop'] ) $crop = false;
-	if ( ! $alt = $options_array['alt'] ) $alt = false;
+	if ( ! $alt = $options_array['alt'] ) $alt = false;	
+	if ( ! $alt_fallback = $options_array['alt_fallback'] ) $alt_fallback = false;
 	if ( ! $add_classes = $options_array['add_classes'] ) $add_classes = '';
 	if ( ! $upscale = $options_array['upscale'] ) $upscale = false; 
 	if ( ! $return = $options_array['return'] ) $return = 'img';
@@ -110,6 +112,10 @@ function resized_on_the_fly($image, $options_array) {
 	if ( ! $alt ) {
 		$attachment = get_post( $image_id ); 
 		$alt = get_post_meta( $attachment->ID, '_wp_attachment_image_alt', true );
+	}
+	// If still no ALT, then use the alt_fallback if supplied
+	if ( ! $alt && $alt_fallback ) {
+		$alt = $alt_fallback;
 	}
 
 	// itemprop="image"

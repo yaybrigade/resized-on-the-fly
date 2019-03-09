@@ -28,6 +28,10 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 == Changelog ==
 
 
+= 2.8 =
+(3/8/2019)
+* Added "alt_fallback" option
+
 = 2.7 =
 (8/4/2016)
 * Performance improvement - image size is saved as a wp transient 
