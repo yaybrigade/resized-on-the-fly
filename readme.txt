@@ -28,6 +28,10 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 == Changelog ==
 
 
+= 2.9 =
+(1/18/2020)
+* Added "add_height_width_attr" option
+
 = 2.8 =
 (3/8/2019)
 * Added "alt_fallback" option

@@ -4,7 +4,7 @@ Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
-Version: 2.8
+Version: 2.9
 Author: Roman Jaster, Yay Brigade
 Author URI: yaybrigade.com
 License: GPLv2 or later
@@ -62,8 +62,9 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 require 'Aqua-Resizer-master/aq_resizer.php'; 
 
 
-
-// Main Function
+/**
+ * Main Function
+ */
 function resized_on_the_fly($image, $options_array) {
 
 	// Get options from array
@@ -80,7 +81,7 @@ function resized_on_the_fly($image, $options_array) {
 	if ( ! $itemprop = $options_array['itemprop'] ) $itemprop = false;
 	if ( ! $lazyload = $options_array['lazyload'] ) $lazyload = false;
 	if ( ! $transparent_placeholder = $options_array['transparent_placeholder'] ) $transparent_placeholder = false;
-	
+	if ( ! $add_height_width_attr = $options_array['add_height_width_attr'] ) $add_height_width_attr = false;
 	
 	// Get the image url
 
@@ -123,9 +124,8 @@ function resized_on_the_fly($image, $options_array) {
 	if ( $itemprop ) {
 		$itemprop_html = ' itemprop="image" '; 
 	}
-	
-	
-	if ($srcset && !$isGif):
+			
+	if ($srcset && !$isGif) {
 		// ***
 		// Responsive Images 
 		// (always ignore gif images)
@@ -156,12 +156,9 @@ function resized_on_the_fly($image, $options_array) {
 				
 				// or use a transparent placeholder
 				if ($transparent_placeholder):
-				
-					// get actual image size -- from transient or by looking at the image
-					if ( false === ( $image_size = get_transient( 'rotf_imagesize_' . $image_id  ) ) ) {
-						$image_size = getimagesize($new_url); 
-						set_transient( 'rotf_imagesize_' . $image_id, $image_size);
-					}
+		
+					$image_size = get_actual_image_size($image_id, $new_url);
+		
 					if ($image_size) {
 						$w = $image_size[0]; // actual image width
 						$h = $image_size[1]; // actual image height
@@ -179,11 +176,22 @@ function resized_on_the_fly($image, $options_array) {
 		if ($lazyload) {
 			$srcset_attribute ="data-srcset";
 		}
+
+		// Check if to include height and width attributes
+		$height_width_html = '';
+		if ($add_height_width_attr) {
+			$image_size = get_actual_image_size($image_id, $new_url);
+			if ($image_size) {
+				$w = $image_size[0]; // actual image width
+				$h = $image_size[1]; // actual image height
+				$height_width_html = "height=\"$h\" width=\"$w\"";
+			}
+		}
 		
-		$img_html = "<img src=\"$smallest_url\"  $srcset_attribute=\"$srcset_string\"  sizes=\"$sizes\"  alt=\"$alt\"  class=\"$add_classes\"  $itemprop_html />";
+		$img_html = "<img src=\"$smallest_url\"  $srcset_attribute=\"$srcset_string\"  sizes=\"$sizes\"  alt=\"$alt\"  class=\"$add_classes\"  $itemprop_html  $height_width_html />";
 		return $img_html;
 
-	else:
+	} else {
 		// ***
 		// Or just return one image
 	
@@ -205,17 +213,28 @@ function resized_on_the_fly($image, $options_array) {
 				$src_attribute ="data-src";
 			}
 			
-			$img_html = "<img $src_attribute=\"$new_url\" alt=\"$alt\" class=\"$add_classes\"  $itemprop_html />";
+			// Check if to include height and width attributes
+			$height_width_html = '';
+			if ($add_height_width_attr) {
+				$image_size = get_actual_image_size($image_id, $new_url);
+				if ($image_size) {
+					$w = $image_size[0]; // actual image width
+					$h = $image_size[1]; // actual image height
+					$height_width_html = "height=\"$h\" width=\"$w\"";
+				}
+			}
+		
+			$img_html = "<img $src_attribute=\"$new_url\" alt=\"$alt\" class=\"$add_classes\"  $itemprop_html $height_width_html />";
 			return $img_html;
 		endif; 
 
-	endif; // if ($srcset)
+	} // if ($srcset)
 };
 
 
 
 /**
- * Flush out the transients used in idt_categorized_blog.
+ * Flush out the transients when image is updated via WP
  */
 function rotf_imagesize_transient_flusher($post_ID) {
 	delete_transient( 'rotf_imagesize_' . $post_ID);
@@ -223,9 +242,21 @@ function rotf_imagesize_transient_flusher($post_ID) {
 add_action( 'edit_attachment', 'rotf_imagesize_transient_flusher' );
 
 /**
- * Helper Function
+ * Helper Functions
  */
+
+// endsWith()
 function endsWith($haystack, $needle) {
 	// search forward starting from end minus needle length characters
 	return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;
+}
+
+// get_actual_image_size()
+function get_actual_image_size($image_id, $new_url) {
+	// get actual image size -- from transient or by looking at the image
+	if ( false === ( $image_size = get_transient( 'rotf_imagesize_' . $image_id  ) ) ) {
+		$image_size = getimagesize($new_url); 
+		set_transient( 'rotf_imagesize_' . $image_id, $image_size);
+	}
+	return $image_size;
 }
