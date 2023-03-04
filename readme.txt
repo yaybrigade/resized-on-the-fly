@@ -28,6 +28,10 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 == Changelog ==
 
 
+= 2.9.1 =
+(3/3/2023)
+* Fixed PHP 8.0 errors
+
 = 2.9 =
 (1/18/2020)
 * Added "add_height_width_attr" option

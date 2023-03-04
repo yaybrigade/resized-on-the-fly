@@ -68,23 +68,22 @@ require 'Aqua-Resizer-master/aq_resizer.php';
 function resized_on_the_fly($image, $options_array) {
 
 	// Get options from array
-	if ( ! $width = $options_array['width'] ) $width = false;
-	if ( ! $height = $options_array['height'] ) $height = false;
-	if ( ! $crop = $options_array['crop'] ) $crop = false;
-	if ( ! $alt = $options_array['alt'] ) $alt = false;	
-	if ( ! $alt_fallback = $options_array['alt_fallback'] ) $alt_fallback = false;
-	if ( ! $add_classes = $options_array['add_classes'] ) $add_classes = '';
-	if ( ! $upscale = $options_array['upscale'] ) $upscale = false; 
-	if ( ! $return = $options_array['return'] ) $return = 'img';
-	if ( ! $srcset = $options_array['srcset'] ) $srcset = false;
-	if ( ! $sizes = $options_array['sizes'] ) $sizes = '';
-	if ( ! $itemprop = $options_array['itemprop'] ) $itemprop = false;
-	if ( ! $lazyload = $options_array['lazyload'] ) $lazyload = false;
-	if ( ! $transparent_placeholder = $options_array['transparent_placeholder'] ) $transparent_placeholder = false;
-	if ( ! $add_height_width_attr = $options_array['add_height_width_attr'] ) $add_height_width_attr = false;
+	$width = $options_array['width'] ?? false;
+	$height = $options_array['height'] ?? false;
+	$crop = $options_array['crop'] ?? false;
+	$alt = $options_array['alt'] ?? false;
+	$alt_fallback = $options_array['alt_fallback'] ?? false;
+	$add_classes = $options_array['add_classes'] ?? false;
+	$upscale = $options_array['upscale'] ?? false;
+	$return = $options_array['return'] ?? 'img';
+	$srcset = $options_array['srcset'] ?? false;
+	$sizes = $options_array['sizes'] ?? '';
+	$itemprop = $options_array['itemprop'] ?? false;
+	$lazyload = $options_array['lazyload'] ?? false;
+	$transparent_placeholder = $options_array['transparent_placeholder'] ?? false;
+	$add_height_width_attr = $options_array['add_height_width_attr'] ?? false;
 	
 	// Get the image url
-
 	if ( 'array' == gettype($image) ):
 		$image_id = $image['id']; // get id from array
 	else:
