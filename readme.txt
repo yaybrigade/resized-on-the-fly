@@ -2,7 +2,7 @@
 Contributors: Roman Jaster, Yay Brigade
 Tags: Utility, Images, Resizing
 Requires at least: 3.5.0
-Tested up to: 4.5.3
+Tested up to: 6.1.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -27,6 +27,9 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 
 == Changelog ==
 
+= 2.10 =
+(3/20/2023)
+* Added Cloudinary support for single images
 
 = 2.9.1 =
 (3/3/2023)

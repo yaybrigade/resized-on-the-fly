@@ -4,7 +4,7 @@ Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
-Version: 2.9.1
+Version: 2.10
 Author: Roman Jaster, Yay Brigade
 Author URI: yaybrigade.com
 License: GPLv2 or later
@@ -32,6 +32,10 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 	  - $crop [boolean]
 	  - $upscale [boolean] (upscale works when both height and width are specified and crop is true)
 	  - $return ['img', 'url']
+	  - $cloudinary_fetch_url
+	  		Example: 'https://res.cloudinary.com/cloudinaryid/image/fetch/'
+	  - $cloudinary_options (Optional string. When supplied, these options overwrite $width, $height, $crop, $upscale.)
+			Example: 'c_fill,w_1333,h_1000,g_auto,f_auto'
 	  
 	  Responsive images options:
 	  - $srcset [int, int, ...]
@@ -82,7 +86,9 @@ function resized_on_the_fly($image, $options_array) {
 	$lazyload = $options_array['lazyload'] ?? false;
 	$transparent_placeholder = $options_array['transparent_placeholder'] ?? false;
 	$add_height_width_attr = $options_array['add_height_width_attr'] ?? false;
-	
+	$cloudinary_fetch_url = $options_array['cloudinary_fetch_url'] ?? false;
+	$cloudinary_options = $options_array['cloudinary_options'] ?? false;
+
 	// Get the image url
 	if ( 'array' == gettype($image) ):
 		$image_id = $image['id']; // get id from array
@@ -196,7 +202,43 @@ function resized_on_the_fly($image, $options_array) {
 	
 		// Get resized image from Aqua Resizer (but don't do this for gif images)
 		if (!$isGif) {
-			$new_url = aq_resize( $original_url, $width, $height, $crop, $single=true, $upscale );	
+			if ($cloudinary_fetch_url) {
+				// Use cloudinary
+
+				// Check if fetch URL has trailing slash 
+				if ('/' != substr($cloudinary_fetch_url , -1) ) {
+					$cloudinary_fetch_url .= '/';
+				}
+
+				// Create cloudinary options
+				if ($cloudinary_options) {
+					// Options were passed as string
+					$cloudinary_string = $cloudinary_options;
+				} else {
+					// Create options based on variables
+					$cloudinary_options = [];
+					if ($width) $cloudinary_options[] = 'w_' . $width;
+					if ($height) $cloudinary_options[] = 'h_' . $height;
+					if ($crop) {
+						if ($upscale) {
+							$cloudinary_options[] = 'c_fill,g_auto';
+						} else {
+							$cloudinary_options[] = 'c_lfill,g_auto';						
+						}
+					} else {
+						$cloudinary_options[] = 'c_fit';
+					}
+					$cloudinary_options[] = 'f_auto';
+					
+					$cloudinary_string = implode(',', $cloudinary_options);
+				}	
+
+				$new_url = $cloudinary_fetch_url . $cloudinary_string . '/' . $original_url;
+
+			} else {
+				// Use Aqua Resizer
+				$new_url = aq_resize( $original_url, $width, $height, $crop, $single=true, $upscale );	
+			}
 		}
 		if ( false == $new_url ) $new_url = $original_url; // If image cannot be created use the original image url
 		
