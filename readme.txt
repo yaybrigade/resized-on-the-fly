@@ -27,6 +27,11 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 
 == Changelog ==
 
+= 2.11 =
+(5/26/2023)
+* Cloudinary support for responsive images
+* Added "flush_transient" option
+
 = 2.10 =
 (3/20/2023)
 * Added Cloudinary support for single images

@@ -4,7 +4,7 @@ Plugin Name: Resized On The Fly
 Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 GitHub Plugin URI: https://github.com/yaybrigade/resized-on-the-fly
 Description: Provides function resized_on_the_fly() for WordPress templates to make it easier to resize image.
-Version: 2.10
+Version: 2.11
 Author: Roman Jaster, Yay Brigade
 Author URI: yaybrigade.com
 License: GPLv2 or later
@@ -32,10 +32,6 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 	  - $crop [boolean]
 	  - $upscale [boolean] (upscale works when both height and width are specified and crop is true)
 	  - $return ['img', 'url']
-	  - $cloudinary_fetch_url
-	  		Example: 'https://res.cloudinary.com/cloudinaryid/image/fetch/'
-	  - $cloudinary_options (Optional string. When supplied, these options overwrite $width, $height, $crop, $upscale.)
-			Example: 'c_fill,w_1333,h_1000,g_auto,f_auto'
 	  
 	  Responsive images options:
 	  - $srcset [int, int, ...]
@@ -55,8 +51,18 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 	  - $add_classes [string]  
 	  - $itemprop [boolean] (add itemprop="image")
 	  - $lazyload [boolean] (for single image: uses data-scr instead of src | for responsive images: uses data-srcset instead of srcset)
+	  - $cloudinary_fetch_url
+	  		Example: 'https://res.cloudinary.com/cloudinaryid/image/fetch/'
+	  - $cloudinary_options (Optional string. When supplied, these options overwrite $width, $height, $crop, $upscale.)
+			Example: 'c_fill,w_1333,h_1000,g_auto,f_auto'
 
-	
+	  Utility options:
+	  - $flush_transient [boolean] (flushes transient for image size)
+		Potential issue with transients:
+		- The function get_actual_image_size() uses a non-expiring transient to store the image size for better performance.
+		  The transient name is based on the image ID. If the transient has been set and the image dimensions changes after 
+		  the fact, the transient has to be deleted, otherwise the function return incorrect (old) data.
+		- This can be solved by passing the parameter $flush_transient once(!), which forces the updating of the transient
 */
 
 
@@ -88,6 +94,14 @@ function resized_on_the_fly($image, $options_array) {
 	$add_height_width_attr = $options_array['add_height_width_attr'] ?? false;
 	$cloudinary_fetch_url = $options_array['cloudinary_fetch_url'] ?? false;
 	$cloudinary_options = $options_array['cloudinary_options'] ?? false;
+	$flush_transient = $options_array['flush_transient'] ?? false;
+
+	// Check if fetch URL has trailing slash 
+	if ($cloudinary_fetch_url) {
+		if ('/' != substr($cloudinary_fetch_url , -1) ) {
+			$cloudinary_fetch_url .= '/';
+		}
+	}
 
 	// Get the image url
 	if ( 'array' == gettype($image) ):
@@ -147,7 +161,23 @@ function resized_on_the_fly($image, $options_array) {
 				$this_height = false;
 			endif;
 		
-			$new_url = aq_resize( $original_url, $this_width, $this_height, $crop, $single=true, $upscale );	
+			if ($cloudinary_fetch_url) {
+				// Use cloudinary
+
+				// Create cloudinary options
+				if ($cloudinary_options) {
+					// Options were passed as string
+					$cloudinary_string = $cloudinary_options;
+				} else {
+					$cloudinary_string = assemble_cloudinary_string($this_width, $this_height, $crop, $upscale);
+				}	
+
+				$new_url = $cloudinary_fetch_url . $cloudinary_string . '/' . $original_url;
+
+			} else {
+				// Use Aqua Resizer
+				$new_url = aq_resize( $original_url, $this_width, $this_height, $crop, $single=true, $upscale );	
+			}
 
 			if ( false == $new_url ) $new_url = $original_url; // If image cannot be created use the original image url
 			
@@ -162,7 +192,7 @@ function resized_on_the_fly($image, $options_array) {
 				// or use a transparent placeholder
 				if ($transparent_placeholder):
 		
-					$image_size = get_actual_image_size($image_id, $new_url);
+					$image_size = get_actual_image_size($image_id, $new_url, $flush_transient);
 		
 					if ($image_size) {
 						$w = $image_size[0]; // actual image width
@@ -185,7 +215,7 @@ function resized_on_the_fly($image, $options_array) {
 		// Check if to include height and width attributes
 		$height_width_html = '';
 		if ($add_height_width_attr) {
-			$image_size = get_actual_image_size($image_id, $new_url);
+			$image_size = get_actual_image_size($image_id, $new_url, $flush_transient);
 			if ($image_size) {
 				$w = $image_size[0]; // actual image width
 				$h = $image_size[1]; // actual image height
@@ -205,32 +235,12 @@ function resized_on_the_fly($image, $options_array) {
 			if ($cloudinary_fetch_url) {
 				// Use cloudinary
 
-				// Check if fetch URL has trailing slash 
-				if ('/' != substr($cloudinary_fetch_url , -1) ) {
-					$cloudinary_fetch_url .= '/';
-				}
-
 				// Create cloudinary options
 				if ($cloudinary_options) {
 					// Options were passed as string
 					$cloudinary_string = $cloudinary_options;
 				} else {
-					// Create options based on variables
-					$cloudinary_options = [];
-					if ($width) $cloudinary_options[] = 'w_' . $width;
-					if ($height) $cloudinary_options[] = 'h_' . $height;
-					if ($crop) {
-						if ($upscale) {
-							$cloudinary_options[] = 'c_fill,g_auto';
-						} else {
-							$cloudinary_options[] = 'c_lfill,g_auto';						
-						}
-					} else {
-						$cloudinary_options[] = 'c_fit';
-					}
-					$cloudinary_options[] = 'f_auto';
-					
-					$cloudinary_string = implode(',', $cloudinary_options);
+					$cloudinary_string = assemble_cloudinary_string($width, $height, $crop, $upscale);
 				}	
 
 				$new_url = $cloudinary_fetch_url . $cloudinary_string . '/' . $original_url;
@@ -257,7 +267,7 @@ function resized_on_the_fly($image, $options_array) {
 			// Check if to include height and width attributes
 			$height_width_html = '';
 			if ($add_height_width_attr) {
-				$image_size = get_actual_image_size($image_id, $new_url);
+				$image_size = get_actual_image_size($image_id, $new_url, $flush_transient);
 				if ($image_size) {
 					$w = $image_size[0]; // actual image width
 					$h = $image_size[1]; // actual image height
@@ -272,6 +282,30 @@ function resized_on_the_fly($image, $options_array) {
 	} // if ($srcset)
 };
 
+
+/**
+ * Assemble Cloudinary String
+ */
+function assemble_cloudinary_string($width, $height, $crop, $upscale) {
+	// Create options based on variables
+	$cloudinary_options = [];
+	if ($width) $cloudinary_options[] = 'w_' . $width;
+	if ($height) $cloudinary_options[] = 'h_' . $height;
+	if ($crop) {
+		if ($upscale) {
+			$cloudinary_options[] = 'c_fill,g_auto';
+		} else {
+			$cloudinary_options[] = 'c_lfill,g_auto';						
+		}
+	} else {
+		$cloudinary_options[] = 'c_fit';
+	}
+	$cloudinary_options[] = 'f_auto';
+	
+	$cloudinary_string = implode(',', $cloudinary_options);
+
+	return $cloudinary_string;
+}
 
 
 /**
@@ -293,9 +327,9 @@ function endsWith($haystack, $needle) {
 }
 
 // get_actual_image_size()
-function get_actual_image_size($image_id, $new_url) {
+function get_actual_image_size($image_id, $new_url, $flush_transient) {
 	// get actual image size -- from transient or by looking at the image
-	if ( false === ( $image_size = get_transient( 'rotf_imagesize_' . $image_id  ) ) ) {
+	if ( ( $flush_transient ) || ( false == ( $image_size = get_transient('rotf_imagesize_' . $image_id) ) ) ) {
 		$image_size = getimagesize($new_url); 
 		set_transient( 'rotf_imagesize_' . $image_id, $image_size);
 	}
