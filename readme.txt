@@ -27,6 +27,10 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 
 == Changelog ==
 
+= 2.11.1 =
+(6/30/2023)
+* Fixed PHP 8.0 errors related to gif files (undefined variable)
+
 = 2.11 =
 (5/26/2023)
 * Cloudinary support for responsive images
