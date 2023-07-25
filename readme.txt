@@ -7,6 +7,10 @@ Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
+=======================
+Current Version: 2.11.2
+=======================
+
 Provides function resized_on_the_fly() to make it easier to resize image in WordPress. 
 
 == Description ==
@@ -26,6 +30,10 @@ Relies on Syamil MJ's Aqua Resizer, which is included.
 3. Function resized_on_the_fly() is now available for use in template files
 
 == Changelog ==
+
+= 2.11.2 =
+(7/25/2023)
+* Changed "c_fit" to "c_limit" for cloudinary option (to prevent from upscaling small images)
 
 = 2.11.1 =
 (6/30/2023)
